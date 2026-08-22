@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { StructWorkspace } from "../dist/index.js";
+import { VariableWorkspace } from "../dist/index.js";
 
 const childDefinition = {
   type: "Struct",
@@ -35,7 +35,7 @@ function createVariable() {
 }
 
 function createWorkspace() {
-  return new StructWorkspace({ "1": rootDefinition, "2": childDefinition });
+  return new VariableWorkspace({ "1": rootDefinition, "2": childDefinition });
 }
 
 test("flattens every compound value and round-trips", () => {

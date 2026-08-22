@@ -1,11 +1,11 @@
-import { StructValue } from "./struct-value.js";
+import { VariableValue } from "./variable-value.js";
 import type { ParamType, QxqyParamNode, QxqyStructNode, RegisteredStructDefinition, StructDefinition } from "./types.js";
 export type DefinitionCollection = Record<string, StructDefinition> | readonly RegisteredStructDefinition[];
 export interface ParseOptions {
     /** Overrides the definition used for the root, useful when the variable id is damaged. */
     definitionId?: string;
 }
-export declare class StructWorkspace {
+export declare class VariableWorkspace {
     #private;
     constructor(definitions?: DefinitionCollection);
     importDefinition(structId: string, definition: StructDefinition | string): this;
@@ -14,8 +14,8 @@ export declare class StructWorkspace {
     hasDefinition(structId: string): boolean;
     getDefinition(structId: string): StructDefinition | undefined;
     get structIds(): readonly string[];
-    parse(variable: QxqyStructNode | QxqyParamNode | string, options?: ParseOptions): StructValue;
-    createDefault(structId: string): StructValue;
+    parse(variable: QxqyStructNode | QxqyParamNode | string, options?: ParseOptions): VariableValue;
+    createDefault(structId: string): VariableValue;
     /** @internal */
     definitionRef(structId: string | undefined): StructDefinition | undefined;
     /** @internal */

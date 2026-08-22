@@ -41,14 +41,14 @@ export interface RegisteredStructDefinition {
     structId: string;
     structDefinition: StructDefinition;
 }
-export interface StructClipboardData {
-    format: "miliastra-struct/clipboard@1";
+export interface VariableClipboardData {
+    format: "miliastra-variable/clipboard@1";
     node: QxqyParamNode;
 }
-export type StructValuePresence = "present" | "missing" | "extra";
-export type StructIssueKind = "type-mismatch" | "struct-id-mismatch" | "missing-field" | "extra-field";
-export interface StructTypeIssue {
-    kind: StructIssueKind;
+export type VariableValuePresence = "present" | "missing" | "extra";
+export type VariableIssueKind = "type-mismatch" | "struct-id-mismatch" | "missing-field" | "extra-field";
+export interface VariableIssue {
+    kind: VariableIssueKind;
     message: string;
     path: string;
     type: ParamType;
@@ -56,10 +56,10 @@ export interface StructTypeIssue {
     structId?: string;
     defineStructId?: string;
 }
-export type StructObjectValue = Record<string, import("./struct-value.js").StructValue>;
-export interface StructDictEntryValue {
-    key: import("./struct-value.js").StructValue;
-    value: import("./struct-value.js").StructValue;
+export type VariableObjectValue = Record<string, import("./variable-value.js").VariableValue>;
+export interface VariableDictEntryValue {
+    key: import("./variable-value.js").VariableValue;
+    value: import("./variable-value.js").VariableValue;
 }
-export type StructValueData = unknown | StructObjectValue | import("./struct-value.js").StructValue[] | StructDictEntryValue[];
+export type VariableValueData = unknown | VariableObjectValue | import("./variable-value.js").VariableValue[] | VariableDictEntryValue[];
 //# sourceMappingURL=types.d.ts.map

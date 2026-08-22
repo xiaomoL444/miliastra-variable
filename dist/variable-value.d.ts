@@ -1,5 +1,5 @@
-import type { StructWorkspace } from "./workspace.js";
-import type { ParamType, QxqyParamNode, StructClipboardData, StructTypeIssue } from "./types.js";
+import type { VariableWorkspace } from "./workspace.js";
+import type { ParamType, QxqyParamNode, VariableClipboardData, VariableIssue } from "./types.js";
 /** @internal */
 export interface ValueDefinition {
     type?: ParamType;
@@ -7,21 +7,21 @@ export interface ValueDefinition {
     name?: string;
     defaultNode?: QxqyParamNode;
 }
-export declare class StructValue {
+export declare class VariableValue {
     #private;
-    readonly workspace: StructWorkspace;
+    readonly workspace: VariableWorkspace;
     private readonly node;
     private readonly definition;
     readonly path: string;
     private readonly root;
-    constructor(workspace: StructWorkspace, node: QxqyParamNode, definition?: ValueDefinition, path?: string, root?: boolean);
+    constructor(workspace: VariableWorkspace, node: QxqyParamNode, definition?: ValueDefinition, path?: string, root?: boolean);
     get type(): ParamType;
     get defineType(): ParamType | undefined;
     /** Field name for members, or the struct type name for struct roots/elements. */
     get name(): string | undefined;
     get structId(): string | undefined;
     get defineStructId(): string | undefined;
-    get presence(): import("./types.js").StructValuePresence;
+    get presence(): import("./types.js").VariableValuePresence;
     get isMissing(): boolean;
     get isExtra(): boolean;
     get isTypeMatch(): boolean;
@@ -29,10 +29,10 @@ export declare class StructValue {
     /** Replaces only the raw value while keeping the node's current type. */
     setValue(value: unknown): this;
     /** Returns an isolated, JSON-safe clipboard payload. */
-    copy(): StructClipboardData;
-    canPaste(data: StructClipboardData): boolean;
+    copy(): VariableClipboardData;
+    canPaste(data: VariableClipboardData): boolean;
     /** Pastes an isolated copy and returns false without mutation when types differ. */
-    paste(data: StructClipboardData): boolean;
+    paste(data: VariableClipboardData): boolean;
     /** Restores the definition's exported default. Returns false if none is available. */
     reset(): boolean;
     /** The original Qianxing parameter-node representation. */
@@ -41,7 +41,7 @@ export declare class StructValue {
     toQxqyValue(): unknown;
     serialize(space?: number): string;
     toJSON(): unknown;
-    get issues(): readonly StructTypeIssue[];
-    get warnings(): readonly StructTypeIssue[];
+    get issues(): readonly VariableIssue[];
+    get warnings(): readonly VariableIssue[];
 }
-//# sourceMappingURL=struct-value.d.ts.map
+//# sourceMappingURL=variable-value.d.ts.map

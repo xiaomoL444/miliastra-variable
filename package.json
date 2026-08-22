@@ -1,5 +1,5 @@
 {
-  "name": "miliastra-struct",
+  "name": "miliastra-variable",
   "version": "0.1.0",
   "description": "Parser and editable value model for Miliastra Wonderland struct variables",
   "type": "module",

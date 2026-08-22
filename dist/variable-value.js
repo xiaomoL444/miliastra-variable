@@ -3,12 +3,12 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
-var _StructValue_instances, _a, _StructValue_structValue, _StructValue_structListValue, _StructValue_dictValue, _StructValue_definedStructId, _StructValue_defaultParam, _StructValue_sameType, _StructValue_collectIssues, _StructValue_issueKind, _StructValue_issueMessage;
+var _VariableValue_instances, _a, _VariableValue_structValue, _VariableValue_structListValue, _VariableValue_dictValue, _VariableValue_definedStructId, _VariableValue_defaultParam, _VariableValue_sameType, _VariableValue_collectIssues, _VariableValue_issueKind, _VariableValue_issueMessage;
 import { getPresence, setPresence } from "./normalization.js";
 import { clone, isParamNode, isRecord } from "./utils.js";
-export class StructValue {
+export class VariableValue {
     constructor(workspace, node, definition = {}, path = "$", root = false) {
-        _StructValue_instances.add(this);
+        _VariableValue_instances.add(this);
         this.workspace = workspace;
         this.node = node;
         this.definition = definition;
@@ -61,11 +61,11 @@ export class StructValue {
     get value() {
         const valueType = this.isMissing ? this.defineType : this.type;
         if (valueType === "Struct")
-            return __classPrivateFieldGet(this, _StructValue_instances, "m", _StructValue_structValue).call(this);
+            return __classPrivateFieldGet(this, _VariableValue_instances, "m", _VariableValue_structValue).call(this);
         if (valueType === "StructList")
-            return __classPrivateFieldGet(this, _StructValue_instances, "m", _StructValue_structListValue).call(this);
+            return __classPrivateFieldGet(this, _VariableValue_instances, "m", _VariableValue_structListValue).call(this);
         if (valueType === "Dict")
-            return __classPrivateFieldGet(this, _StructValue_instances, "m", _StructValue_dictValue).call(this);
+            return __classPrivateFieldGet(this, _VariableValue_instances, "m", _VariableValue_dictValue).call(this);
         return this.node.value;
     }
     /** Replaces only the raw value while keeping the node's current type. */
@@ -76,16 +76,16 @@ export class StructValue {
     /** Returns an isolated, JSON-safe clipboard payload. */
     copy() {
         return {
-            format: "miliastra-struct/clipboard@1",
+            format: "miliastra-variable/clipboard@1",
             node: clone(this.node),
         };
     }
     canPaste(data) {
-        if (data?.format !== "miliastra-struct/clipboard@1" || !isParamNode(data.node)) {
+        if (data?.format !== "miliastra-variable/clipboard@1" || !isParamNode(data.node)) {
             return false;
         }
         const target = this.isMissing ? this.definition.defaultNode : this.node;
-        return target ? __classPrivateFieldGet(this, _StructValue_instances, "m", _StructValue_sameType).call(this, target, data.node) : false;
+        return target ? __classPrivateFieldGet(this, _VariableValue_instances, "m", _VariableValue_sameType).call(this, target, data.node) : false;
     }
     /** Pastes an isolated copy and returns false without mutation when types differ. */
     paste(data) {
@@ -124,14 +124,14 @@ export class StructValue {
     }
     get issues() {
         const issues = [];
-        __classPrivateFieldGet(this, _StructValue_instances, "m", _StructValue_collectIssues).call(this, issues);
+        __classPrivateFieldGet(this, _VariableValue_instances, "m", _VariableValue_collectIssues).call(this, issues);
         return issues;
     }
     get warnings() {
         return this.issues;
     }
 }
-_a = StructValue, _StructValue_instances = new WeakSet(), _StructValue_structValue = function _StructValue_structValue() {
+_a = VariableValue, _VariableValue_instances = new WeakSet(), _VariableValue_structValue = function _VariableValue_structValue() {
     const raw = this.node.value;
     if (!isRecord(raw) || !Array.isArray(raw.value))
         return Object.create(null);
@@ -144,14 +144,14 @@ _a = StructValue, _StructValue_instances = new WeakSet(), _StructValue_structVal
         const key = field?.key ?? `$extra[${index}]`;
         const expected = {
             type: field?.param_type,
-            structId: field ? __classPrivateFieldGet(this, _StructValue_instances, "m", _StructValue_definedStructId).call(this, field.value) : undefined,
+            structId: field ? __classPrivateFieldGet(this, _VariableValue_instances, "m", _VariableValue_definedStructId).call(this, field.value) : undefined,
             name: field?.key,
             defaultNode: field ? clone(field.value) : undefined,
         };
         result[key] = new _a(this.workspace, child, expected, `${this.path}.value.${key}`);
     });
     return result;
-}, _StructValue_structListValue = function _StructValue_structListValue() {
+}, _VariableValue_structListValue = function _VariableValue_structListValue() {
     const raw = this.node.value;
     if (!isRecord(raw) || !Array.isArray(raw.value))
         return [];
@@ -168,7 +168,7 @@ _a = StructValue, _StructValue_instances = new WeakSet(), _StructValue_structVal
             new _a(this.workspace, child, { type: "Struct", structId, name: definition?.name, defaultNode }, `${this.path}.value[${index}]`),
         ];
     });
-}, _StructValue_dictValue = function _StructValue_dictValue() {
+}, _VariableValue_dictValue = function _VariableValue_dictValue() {
     const raw = this.node.value;
     if (!isRecord(raw) || !Array.isArray(raw.value))
         return [];
@@ -187,26 +187,26 @@ _a = StructValue, _StructValue_instances = new WeakSet(), _StructValue_structVal
                 key: new _a(this.workspace, entry.key, {
                     type: keyType,
                     name: "key",
-                    defaultNode: __classPrivateFieldGet(this, _StructValue_instances, "m", _StructValue_defaultParam).call(this, keyType),
+                    defaultNode: __classPrivateFieldGet(this, _VariableValue_instances, "m", _VariableValue_defaultParam).call(this, keyType),
                 }, `${this.path}.value[${index}].key`),
                 value: new _a(this.workspace, entry.value, {
                     type: valueType,
                     structId: valueStructId,
                     name: "value",
-                    defaultNode: __classPrivateFieldGet(this, _StructValue_instances, "m", _StructValue_defaultParam).call(this, valueType, valueStructId),
+                    defaultNode: __classPrivateFieldGet(this, _VariableValue_instances, "m", _VariableValue_defaultParam).call(this, valueType, valueStructId),
                 }, `${this.path}.value[${index}].value`),
             }];
     });
-}, _StructValue_definedStructId = function _StructValue_definedStructId(node) {
+}, _VariableValue_definedStructId = function _VariableValue_definedStructId(node) {
     return this.workspace.structIdOf(node);
-}, _StructValue_defaultParam = function _StructValue_defaultParam(type, structId) {
+}, _VariableValue_defaultParam = function _VariableValue_defaultParam(type, structId) {
     if (!type)
         return undefined;
     if (type === "Struct" && (!structId || !this.workspace.definitionRef(structId))) {
         return undefined;
     }
     return this.workspace.createDefaultParam(type, structId);
-}, _StructValue_sameType = function _StructValue_sameType(left, right) {
+}, _VariableValue_sameType = function _VariableValue_sameType(left, right) {
     if (left.param_type !== right.param_type)
         return false;
     if (left.param_type === "Struct" || left.param_type === "StructList") {
@@ -222,13 +222,13 @@ _a = StructValue, _StructValue_instances = new WeakSet(), _StructValue_structVal
             a.value_structId === b.value_structId);
     }
     return true;
-}, _StructValue_collectIssues = function _StructValue_collectIssues(output) {
+}, _VariableValue_collectIssues = function _VariableValue_collectIssues(output) {
     var _b, _c;
     if (!this.isTypeMatch) {
-        const kind = __classPrivateFieldGet(this, _StructValue_instances, "m", _StructValue_issueKind).call(this);
+        const kind = __classPrivateFieldGet(this, _VariableValue_instances, "m", _VariableValue_issueKind).call(this);
         const issue = {
             kind,
-            message: __classPrivateFieldGet(this, _StructValue_instances, "m", _StructValue_issueMessage).call(this, kind),
+            message: __classPrivateFieldGet(this, _VariableValue_instances, "m", _VariableValue_issueMessage).call(this, kind),
             path: this.path,
             type: this.type,
         };
@@ -242,20 +242,20 @@ _a = StructValue, _StructValue_instances = new WeakSet(), _StructValue_structVal
     }
     const valueType = this.isMissing ? this.defineType : this.type;
     if (valueType === "Struct") {
-        for (const child of Object.values(__classPrivateFieldGet(this, _StructValue_instances, "m", _StructValue_structValue).call(this)))
-            __classPrivateFieldGet(child, _StructValue_instances, "m", _StructValue_collectIssues).call(child, output);
+        for (const child of Object.values(__classPrivateFieldGet(this, _VariableValue_instances, "m", _VariableValue_structValue).call(this)))
+            __classPrivateFieldGet(child, _VariableValue_instances, "m", _VariableValue_collectIssues).call(child, output);
     }
     else if (valueType === "StructList") {
-        for (const child of __classPrivateFieldGet(this, _StructValue_instances, "m", _StructValue_structListValue).call(this))
-            __classPrivateFieldGet(child, _StructValue_instances, "m", _StructValue_collectIssues).call(child, output);
+        for (const child of __classPrivateFieldGet(this, _VariableValue_instances, "m", _VariableValue_structListValue).call(this))
+            __classPrivateFieldGet(child, _VariableValue_instances, "m", _VariableValue_collectIssues).call(child, output);
     }
     else if (valueType === "Dict") {
-        for (const entry of __classPrivateFieldGet(this, _StructValue_instances, "m", _StructValue_dictValue).call(this)) {
-            __classPrivateFieldGet((_b = entry.key), _StructValue_instances, "m", _StructValue_collectIssues).call(_b, output);
-            __classPrivateFieldGet((_c = entry.value), _StructValue_instances, "m", _StructValue_collectIssues).call(_c, output);
+        for (const entry of __classPrivateFieldGet(this, _VariableValue_instances, "m", _VariableValue_dictValue).call(this)) {
+            __classPrivateFieldGet((_b = entry.key), _VariableValue_instances, "m", _VariableValue_collectIssues).call(_b, output);
+            __classPrivateFieldGet((_c = entry.value), _VariableValue_instances, "m", _VariableValue_collectIssues).call(_c, output);
         }
     }
-}, _StructValue_issueKind = function _StructValue_issueKind() {
+}, _VariableValue_issueKind = function _VariableValue_issueKind() {
     if (this.isMissing)
         return "missing-field";
     if (this.isExtra)
@@ -264,7 +264,7 @@ _a = StructValue, _StructValue_instances = new WeakSet(), _StructValue_structVal
         return "struct-id-mismatch";
     }
     return "type-mismatch";
-}, _StructValue_issueMessage = function _StructValue_issueMessage(kind) {
+}, _VariableValue_issueMessage = function _VariableValue_issueMessage(kind) {
     if (kind === "missing-field") {
         return `变量缺少字段，已用定义默认值补充；实际类型留空，定义类型为 ${this.defineType ?? "未知"}。`;
     }
@@ -275,4 +275,4 @@ _a = StructValue, _StructValue_instances = new WeakSet(), _StructValue_structVal
     }
     return `字段类型不一致：变量为 ${this.type || "空"}，定义为 ${this.defineType ?? "未知"}。`;
 };
-//# sourceMappingURL=struct-value.js.map
+//# sourceMappingURL=variable-value.js.map

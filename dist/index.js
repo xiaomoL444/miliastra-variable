@@ -1,3 +1,3 @@
-export { StructValue } from "./struct-value.js";
-export { StructWorkspace, } from "./workspace.js";
+export { VariableValue } from "./variable-value.js";
+export { VariableWorkspace, } from "./workspace.js";
 //# sourceMappingURL=index.js.map

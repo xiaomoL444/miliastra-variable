@@ -1,6 +1,6 @@
-export { StructValue } from "./struct-value.js";
+export { VariableValue } from "./variable-value.js";
 export {
-  StructWorkspace,
+  VariableWorkspace,
   type DefinitionCollection,
   type ParseOptions,
 } from "./workspace.js";
@@ -13,13 +13,13 @@ export type {
   QxqyStructListNode,
   QxqyStructNode,
   RegisteredStructDefinition,
-  StructClipboardData,
+  VariableClipboardData,
   StructDefinition,
-  StructDictEntryValue,
+  VariableDictEntryValue,
   StructFieldDefinition,
-  StructIssueKind,
-  StructObjectValue,
-  StructTypeIssue,
-  StructValuePresence,
-  StructValueData,
+  VariableIssueKind,
+  VariableObjectValue,
+  VariableIssue,
+  VariableValuePresence,
+  VariableValueData,
 } from "./types.js";

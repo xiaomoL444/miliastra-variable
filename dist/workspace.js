@@ -3,21 +3,21 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
-var _StructWorkspace_instances, _StructWorkspace_definitions, _StructWorkspace_assertDefinition;
-import { StructValue } from "./struct-value.js";
+var _VariableWorkspace_instances, _VariableWorkspace_definitions, _VariableWorkspace_assertDefinition;
+import { VariableValue } from "./variable-value.js";
 import { normalizeNode } from "./normalization.js";
 import { clone, isParamNode, isRecord, isStructNode } from "./utils.js";
-export class StructWorkspace {
+export class VariableWorkspace {
     constructor(definitions) {
-        _StructWorkspace_instances.add(this);
-        _StructWorkspace_definitions.set(this, new Map());
+        _VariableWorkspace_instances.add(this);
+        _VariableWorkspace_definitions.set(this, new Map());
         if (definitions)
             this.importDefinitions(definitions);
     }
     importDefinition(structId, definition) {
         const parsed = typeof definition === "string" ? JSON.parse(definition) : definition;
-        __classPrivateFieldGet(this, _StructWorkspace_instances, "m", _StructWorkspace_assertDefinition).call(this, structId, parsed);
-        __classPrivateFieldGet(this, _StructWorkspace_definitions, "f").set(String(structId), clone(parsed));
+        __classPrivateFieldGet(this, _VariableWorkspace_instances, "m", _VariableWorkspace_assertDefinition).call(this, structId, parsed);
+        __classPrivateFieldGet(this, _VariableWorkspace_definitions, "f").set(String(structId), clone(parsed));
         return this;
     }
     importDefinitions(definitions) {
@@ -33,17 +33,17 @@ export class StructWorkspace {
         return this;
     }
     removeDefinition(structId) {
-        return __classPrivateFieldGet(this, _StructWorkspace_definitions, "f").delete(String(structId));
+        return __classPrivateFieldGet(this, _VariableWorkspace_definitions, "f").delete(String(structId));
     }
     hasDefinition(structId) {
-        return __classPrivateFieldGet(this, _StructWorkspace_definitions, "f").has(String(structId));
+        return __classPrivateFieldGet(this, _VariableWorkspace_definitions, "f").has(String(structId));
     }
     getDefinition(structId) {
-        const definition = __classPrivateFieldGet(this, _StructWorkspace_definitions, "f").get(String(structId));
+        const definition = __classPrivateFieldGet(this, _VariableWorkspace_definitions, "f").get(String(structId));
         return definition && clone(definition);
     }
     get structIds() {
-        return [...__classPrivateFieldGet(this, _StructWorkspace_definitions, "f").keys()];
+        return [...__classPrivateFieldGet(this, _VariableWorkspace_definitions, "f").keys()];
     }
     parse(variable, options = {}) {
         const parsed = typeof variable === "string" ? JSON.parse(variable) : variable;
@@ -59,7 +59,7 @@ export class StructWorkspace {
         }
         const actualId = this.structIdOf(node);
         const definitionId = options.definitionId ?? actualId;
-        const definition = definitionId ? __classPrivateFieldGet(this, _StructWorkspace_definitions, "f").get(definitionId) : undefined;
+        const definition = definitionId ? __classPrivateFieldGet(this, _VariableWorkspace_definitions, "f").get(definitionId) : undefined;
         const expected = {
             type: definition ? "Struct" : undefined,
             structId: definitionId,
@@ -69,10 +69,10 @@ export class StructWorkspace {
                 : undefined,
         };
         normalizeNode(this, node, expected.defaultNode);
-        return new StructValue(this, node, expected, "$", true);
+        return new VariableValue(this, node, expected, "$", true);
     }
     createDefault(structId) {
-        const definition = __classPrivateFieldGet(this, _StructWorkspace_definitions, "f").get(String(structId));
+        const definition = __classPrivateFieldGet(this, _VariableWorkspace_definitions, "f").get(String(structId));
         if (!definition)
             throw new Error(`Unknown struct definition: ${structId}`);
         return this.parse(this.createDefaultParam("Struct", String(structId)), {
@@ -81,7 +81,7 @@ export class StructWorkspace {
     }
     /** @internal */
     definitionRef(structId) {
-        return structId ? __classPrivateFieldGet(this, _StructWorkspace_definitions, "f").get(String(structId)) : undefined;
+        return structId ? __classPrivateFieldGet(this, _VariableWorkspace_definitions, "f").get(String(structId)) : undefined;
     }
     /** @internal */
     structIdOf(node) {
@@ -100,7 +100,7 @@ export class StructWorkspace {
         if (type === "Struct") {
             if (!structId)
                 throw new Error("A struct id is required for Struct defaults.");
-            const definition = __classPrivateFieldGet(this, _StructWorkspace_definitions, "f").get(String(structId));
+            const definition = __classPrivateFieldGet(this, _VariableWorkspace_definitions, "f").get(String(structId));
             if (!definition)
                 throw new Error(`Unknown struct definition: ${structId}`);
             const value = {
@@ -138,7 +138,7 @@ export class StructWorkspace {
         return { param_type: type, value: "0" };
     }
 }
-_StructWorkspace_definitions = new WeakMap(), _StructWorkspace_instances = new WeakSet(), _StructWorkspace_assertDefinition = function _StructWorkspace_assertDefinition(structId, value) {
+_VariableWorkspace_definitions = new WeakMap(), _VariableWorkspace_instances = new WeakSet(), _VariableWorkspace_assertDefinition = function _VariableWorkspace_assertDefinition(structId, value) {
     if (!isRecord(value) ||
         typeof value.name !== "string" ||
         !Array.isArray(value.value)) {

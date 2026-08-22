@@ -1,11 +1,11 @@
-# miliastra-struct
+# miliastra-variable
 
 千星奇域结构体定义与结构体变量的零依赖 TypeScript 解析库。保留编辑器可重新导入的原始 JSON，同时提供适合前端渲染的扁平访问方式。
 
 ```ts
-import { StructWorkspace } from "miliastra-struct";
+import { VariableWorkspace } from "miliastra-variable";
 
-const workspace = new StructWorkspace();
+const workspace = new VariableWorkspace();
 workspace.importDefinition("1077936130", definitionJson);
 workspace.importDefinition("1077936131", childDefinitionJson);
 
@@ -21,7 +21,7 @@ structValue.value.新增变量24.value[0].key;
 structValue.value.新增变量24.value[0].value;
 ```
 
-`value` 的形状：普通类型返回原始值，普通列表返回原始数组，`Struct` 返回以字段名为键的对象，`StructList` 返回 `StructValue[]`，`Dict` 返回 `{ key: StructValue; value: StructValue }[]`。
+`value` 的形状：普通类型返回原始值，普通列表返回原始数组，`Struct` 返回以字段名为键的对象，`StructList` 返回 `VariableValue[]`，`Dict` 返回 `{ key: VariableValue; value: VariableValue }[]`。
 
 ## 类型冲突
 
@@ -79,7 +79,7 @@ const rawField = structValue.value.新增变量1.toParamNode();
 ## 批量定义与默认实例
 
 ```ts
-const workspace = new StructWorkspace({
+const workspace = new VariableWorkspace({
   "1077936130": rootDefinition,
   "1077936131": childDefinition,
 });
@@ -104,4 +104,4 @@ pnpm publish --access public
 
 不要求先建立新的 Git 项目；可以直接从这个子目录发布。若准备长期维护，推荐把 `packages/miliastra-struct` 单独放进一个公开 Git 仓库，再在 `package.json` 补充 `author`、`repository`、`homepage` 和 `bugs`。
 
-当前包名是 `miliastra-struct`。发布前先在 npm 搜索确认名称可用；如果已被占用，推荐改为个人 scope，例如 `@你的npm用户名/miliastra-struct`。scope 包公开发布时保留 `--access public`。每次再次发布都必须先提升 `version`，已经发布过的同名同版本不能重复使用。
+当前包名是 `miliastra-variable`。发布前先在 npm 搜索确认名称可用；如果已被占用，推荐改为个人 scope，例如 `@你的npm用户名/miliastra-variable`。scope 包公开发布时保留 `--access public`。每次再次发布都必须先提升 `version`，已经发布过的同名同版本不能重复使用。

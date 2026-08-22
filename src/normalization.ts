@@ -1,19 +1,19 @@
-import type { StructWorkspace } from "./workspace.js";
+import type { VariableWorkspace } from "./workspace.js";
 import type {
   QxqyParamNode,
-  StructValuePresence,
+  VariableValuePresence,
 } from "./types.js";
 import { clone, isParamNode, isRecord } from "./utils.js";
 
-const presence = new WeakMap<object, StructValuePresence>();
+const presence = new WeakMap<object, VariableValuePresence>();
 
-export function getPresence(node: QxqyParamNode): StructValuePresence {
+export function getPresence(node: QxqyParamNode): VariableValuePresence {
   return presence.get(node) ?? "present";
 }
 
 export function setPresence(
   node: QxqyParamNode,
-  value: StructValuePresence,
+  value: VariableValuePresence,
 ): void {
   if (value === "present") presence.delete(node);
   else presence.set(node, value);
@@ -25,7 +25,7 @@ export function setPresence(
  * unambiguous. Lists and dictionary entry counts are variable by definition.
  */
 export function normalizeNode(
-  workspace: StructWorkspace,
+  workspace: VariableWorkspace,
   node: QxqyParamNode,
   expected?: QxqyParamNode,
 ): void {

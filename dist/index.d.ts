@@ -1,4 +1,4 @@
-export { StructValue } from "./struct-value.js";
-export { StructWorkspace, type DefinitionCollection, type ParseOptions, } from "./workspace.js";
-export type { KnownParamType, ParamType, QxqyDictEntry, QxqyDictNode, QxqyParamNode, QxqyStructListNode, QxqyStructNode, RegisteredStructDefinition, StructClipboardData, StructDefinition, StructDictEntryValue, StructFieldDefinition, StructIssueKind, StructObjectValue, StructTypeIssue, StructValuePresence, StructValueData, } from "./types.js";
+export { VariableValue } from "./variable-value.js";
+export { VariableWorkspace, type DefinitionCollection, type ParseOptions, } from "./workspace.js";
+export type { KnownParamType, ParamType, QxqyDictEntry, QxqyDictNode, QxqyParamNode, QxqyStructListNode, QxqyStructNode, RegisteredStructDefinition, VariableClipboardData, StructDefinition, VariableDictEntryValue, StructFieldDefinition, VariableIssueKind, VariableObjectValue, VariableIssue, VariableValuePresence, VariableValueData, } from "./types.js";
 //# sourceMappingURL=index.d.ts.map

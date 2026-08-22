@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { StructWorkspace } from "../dist/index.js";
+import { VariableWorkspace } from "../dist/index.js";
 
 const childDefinition = {
   type: "Struct",
@@ -32,7 +32,7 @@ const definition = {
 };
 
 function workspace() {
-  return new StructWorkspace({ "1": definition, "2": childDefinition });
+  return new VariableWorkspace({ "1": definition, "2": childDefinition });
 }
 
 test("fills missing tail fields with defaults while preserving the warning state", () => {
@@ -85,7 +85,7 @@ test("retains extra fields, exposes them by source index and warns", () => {
     ...definition,
     value: definition.value.slice(0, 3),
   };
-  const ws = new StructWorkspace({ "1": shortDefinition, "2": childDefinition });
+  const ws = new VariableWorkspace({ "1": shortDefinition, "2": childDefinition });
   const parsed = ws.parse(source);
 
   const extra = parsed.value["$extra[3]"];

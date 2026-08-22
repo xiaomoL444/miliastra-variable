@@ -1,4 +1,4 @@
-import type { StructWorkspace } from "./workspace.js";
+import type { VariableWorkspace } from "./workspace.js";
 import { getPresence, setPresence } from "./normalization.js";
 import type {
   ParamType,
@@ -6,11 +6,11 @@ import type {
   QxqyParamNode,
   QxqyStructListNode,
   QxqyStructNode,
-  StructClipboardData,
-  StructDictEntryValue,
-  StructObjectValue,
-  StructTypeIssue,
-  StructValueData,
+  VariableClipboardData,
+  VariableDictEntryValue,
+  VariableObjectValue,
+  VariableIssue,
+  VariableValueData,
 } from "./types.js";
 import { clone, isParamNode, isRecord } from "./utils.js";
 
@@ -22,9 +22,9 @@ export interface ValueDefinition {
   defaultNode?: QxqyParamNode;
 }
 
-export class StructValue {
+export class VariableValue {
   constructor(
-    readonly workspace: StructWorkspace,
+    readonly workspace: VariableWorkspace,
     private readonly node: QxqyParamNode,
     private readonly definition: ValueDefinition = {},
     readonly path = "$",
@@ -97,15 +97,15 @@ export class StructValue {
   }
 
   /** Returns an isolated, JSON-safe clipboard payload. */
-  copy(): StructClipboardData {
+  copy(): VariableClipboardData {
     return {
-      format: "miliastra-struct/clipboard@1",
+      format: "miliastra-variable/clipboard@1",
       node: clone(this.node),
     };
   }
 
-  canPaste(data: StructClipboardData): boolean {
-    if (data?.format !== "miliastra-struct/clipboard@1" || !isParamNode(data.node)) {
+  canPaste(data: VariableClipboardData): boolean {
+    if (data?.format !== "miliastra-variable/clipboard@1" || !isParamNode(data.node)) {
       return false;
     }
     const target = this.isMissing ? this.definition.defaultNode : this.node;
@@ -113,7 +113,7 @@ export class StructValue {
   }
 
   /** Pastes an isolated copy and returns false without mutation when types differ. */
-  paste(data: StructClipboardData): boolean {
+  paste(data: VariableClipboardData): boolean {
     if (!this.canPaste(data)) return false;
     const next = clone(data.node);
     this.node.param_type = next.param_type;
@@ -150,23 +150,23 @@ export class StructValue {
     return this.root ? this.toQxqyValue() : this.toParamNode();
   }
 
-  get issues(): readonly StructTypeIssue[] {
-    const issues: StructTypeIssue[] = [];
+  get issues(): readonly VariableIssue[] {
+    const issues: VariableIssue[] = [];
     this.#collectIssues(issues);
     return issues;
   }
 
-  get warnings(): readonly StructTypeIssue[] {
+  get warnings(): readonly VariableIssue[] {
     return this.issues;
   }
 
-  #structValue(): StructObjectValue {
+  #structValue(): VariableObjectValue {
     const raw = this.node.value as Partial<QxqyStructNode>;
     if (!isRecord(raw) || !Array.isArray(raw.value)) return Object.create(null);
     const structDefinition = this.workspace.definitionRef(
       typeof raw.structId === "string" ? raw.structId : this.defineStructId,
     );
-    const result: StructObjectValue = Object.create(null) as StructObjectValue;
+    const result: VariableObjectValue = Object.create(null) as VariableObjectValue;
     raw.value.forEach((child, index) => {
       if (!isParamNode(child)) return;
       const field = structDefinition?.value[index];
@@ -177,7 +177,7 @@ export class StructValue {
         name: field?.key,
         defaultNode: field ? clone(field.value) : undefined,
       };
-      result[key] = new StructValue(
+      result[key] = new VariableValue(
         this.workspace,
         child,
         expected,
@@ -187,7 +187,7 @@ export class StructValue {
     return result;
   }
 
-  #structListValue(): StructValue[] {
+  #structListValue(): VariableValue[] {
     const raw = this.node.value as Partial<QxqyStructListNode>;
     if (!isRecord(raw) || !Array.isArray(raw.value)) return [];
     const structId = typeof raw.structId === "string" ? raw.structId : undefined;
@@ -199,7 +199,7 @@ export class StructValue {
         defaultNode = this.workspace.createDefaultParam("Struct", structId);
       }
       return [
-        new StructValue(
+        new VariableValue(
           this.workspace,
           child,
           { type: "Struct", structId, name: definition?.name, defaultNode },
@@ -209,7 +209,7 @@ export class StructValue {
     });
   }
 
-  #dictValue(): StructDictEntryValue[] {
+  #dictValue(): VariableDictEntryValue[] {
     const raw = this.node.value as Partial<QxqyDictNode>;
     if (!isRecord(raw) || !Array.isArray(raw.value)) return [];
     const defaultDict = this.definition.defaultNode?.value;
@@ -228,7 +228,7 @@ export class StructValue {
         return [];
       }
       return [{
-        key: new StructValue(
+        key: new VariableValue(
           this.workspace,
           entry.key,
           {
@@ -238,7 +238,7 @@ export class StructValue {
           },
           `${this.path}.value[${index}].key`,
         ),
-        value: new StructValue(
+        value: new VariableValue(
           this.workspace,
           entry.value,
           {
@@ -283,10 +283,10 @@ export class StructValue {
     return true;
   }
 
-  #collectIssues(output: StructTypeIssue[]): void {
+  #collectIssues(output: VariableIssue[]): void {
     if (!this.isTypeMatch) {
       const kind = this.#issueKind();
-      const issue: StructTypeIssue = {
+      const issue: VariableIssue = {
         kind,
         message: this.#issueMessage(kind),
         path: this.path,
@@ -310,7 +310,7 @@ export class StructValue {
     }
   }
 
-  #issueKind(): StructTypeIssue["kind"] {
+  #issueKind(): VariableIssue["kind"] {
     if (this.isMissing) return "missing-field";
     if (this.isExtra) return "extra-field";
     if (this.type === this.defineType && this.defineStructId !== undefined && this.structId !== this.defineStructId) {
@@ -319,7 +319,7 @@ export class StructValue {
     return "type-mismatch";
   }
 
-  #issueMessage(kind: StructTypeIssue["kind"]): string {
+  #issueMessage(kind: VariableIssue["kind"]): string {
     if (kind === "missing-field") {
       return `变量缺少字段，已用定义默认值补充；实际类型留空，定义类型为 ${this.defineType ?? "未知"}。`;
     }

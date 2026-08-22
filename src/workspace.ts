@@ -1,4 +1,4 @@
-import { StructValue, type ValueDefinition } from "./struct-value.js";
+import { VariableValue, type ValueDefinition } from "./variable-value.js";
 import { normalizeNode } from "./normalization.js";
 import type {
   ParamType,
@@ -19,7 +19,7 @@ export interface ParseOptions {
   definitionId?: string;
 }
 
-export class StructWorkspace {
+export class VariableWorkspace {
   readonly #definitions = new Map<string, StructDefinition>();
 
   constructor(definitions?: DefinitionCollection) {
@@ -69,7 +69,7 @@ export class StructWorkspace {
   parse(
     variable: QxqyStructNode | QxqyParamNode | string,
     options: ParseOptions = {},
-  ): StructValue {
+  ): VariableValue {
     const parsed: unknown = typeof variable === "string" ? JSON.parse(variable) : variable;
     let node: QxqyParamNode;
     if (isParamNode(parsed)) {
@@ -93,10 +93,10 @@ export class StructWorkspace {
           : undefined,
     };
     normalizeNode(this, node, expected.defaultNode);
-    return new StructValue(this, node, expected, "$", true);
+    return new VariableValue(this, node, expected, "$", true);
   }
 
-  createDefault(structId: string): StructValue {
+  createDefault(structId: string): VariableValue {
     const definition = this.#definitions.get(String(structId));
     if (!definition) throw new Error(`Unknown struct definition: ${structId}`);
     return this.parse(this.createDefaultParam("Struct", String(structId)), {
