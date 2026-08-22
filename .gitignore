@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Generated build and test output
+dist/
+coverage/
+*.tgz
+
+# Logs
+*.log
+pnpm-debug.log*
+npm-debug.log*
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Editors and operating systems
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
