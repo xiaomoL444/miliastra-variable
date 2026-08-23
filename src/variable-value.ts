@@ -1,5 +1,5 @@
 import type { VariableWorkspace } from "./workspace.js";
-import { getPresence, setPresence } from "./normalization.js";
+import { getPresence, normalizeNode, setPresence } from "./normalization.js";
 import type {
   ParamType,
   QxqyDictNode,
@@ -81,7 +81,7 @@ export class VariableValue {
   }
 
   // Definitions are runtime JSON, so field names cannot be inferred statically.
-  // `any` intentionally keeps `value.xxx.value` ergonomic for dynamic schemas.
+  // `any` intentionally keeps `value["xxx"].value` ergonomic for dynamic schemas.
   get value(): any {
     const valueType = this.isMissing ? this.defineType : this.type;
     if (valueType === "Struct") return this.#structValue();
@@ -94,6 +94,64 @@ export class VariableValue {
   setValue(value: unknown): this {
     this.node.value = clone(value);
     return this;
+  }
+
+
+
+  /** Number of entries in a normal list, StructList, or Dict. */
+  get itemCount(): number {
+    return this.#collectionItems().length;
+  }
+
+  /** Appends an item and returns its index. Omit the item to use a type default. */
+  appendItem(item?: unknown): number {
+    const items = this.#collectionItems();
+    const index = items.length;
+    items.push(this.#createCollectionItem(item));
+    return index;
+  }
+
+  /** Inserts before index and returns the inserted index. */
+  insertItem(index: number, item?: unknown): number {
+    const items = this.#collectionItems();
+    this.#assertIndex(index, items.length, true);
+    items.splice(index, 0, this.#createCollectionItem(item));
+    return index;
+  }
+
+  /** Swaps two items in place. */
+  swapItems(firstIndex: number, secondIndex: number): this {
+    const items = this.#collectionItems();
+    this.#assertIndex(firstIndex, items.length);
+    this.#assertIndex(secondIndex, items.length);
+    [items[firstIndex], items[secondIndex]] = [items[secondIndex], items[firstIndex]];
+    return this;
+  }
+
+  /**
+   * Removes and returns an item. StructList items return clipboard data; Dict
+   * entries return `{ key: clipboard, value: clipboard }` for easy reinsertion.
+   */
+  removeItem(index: number): unknown {
+    const items = this.#collectionItems();
+    this.#assertIndex(index, items.length);
+    const [removed] = items.splice(index, 1);
+    const type = this.#collectionType();
+    if (type === "StructList" && isParamNode(removed)) {
+      return this.#clipboard(removed);
+    }
+    if (
+      type === "Dict" &&
+      isRecord(removed) &&
+      isParamNode(removed.key) &&
+      isParamNode(removed.value)
+    ) {
+      return {
+        key: this.#clipboard(removed.key),
+        value: this.#clipboard(removed.value),
+      };
+    }
+    return clone(removed);
   }
 
   /** Returns an isolated, JSON-safe clipboard payload. */
@@ -181,7 +239,7 @@ export class VariableValue {
         this.workspace,
         child,
         expected,
-        `${this.path}.value.${key}`,
+        `${this.path}.value[${JSON.stringify(key)}]`,
       );
     });
     return result;
@@ -263,6 +321,152 @@ export class VariableValue {
       return undefined;
     }
     return this.workspace.createDefaultParam(type, structId);
+  }
+
+
+
+  #collectionType(): ParamType {
+    const type = this.isMissing ? this.defineType : this.type;
+    if (type === "Dict" || type === "StructList" || type?.endsWith("List")) {
+      return type;
+    }
+    throw new TypeError(`${this.path} is not a list, StructList, or Dict.`);
+  }
+
+  #collectionItems(): unknown[] {
+    const type = this.#collectionType();
+    if (type === "Dict" || type === "StructList") {
+      if (!isRecord(this.node.value) || !Array.isArray(this.node.value.value)) {
+        throw new TypeError(`${this.path} has an invalid ${type} value.`);
+      }
+      return this.node.value.value;
+    }
+    if (!Array.isArray(this.node.value)) {
+      throw new TypeError(`${this.path} has an invalid ${type} value.`);
+    }
+    return this.node.value;
+  }
+
+  #createCollectionItem(item: unknown): unknown {
+    const type = this.#collectionType();
+    if (type === "StructList") return this.#createStructListItem(item);
+    if (type === "Dict") return this.#createDictItem(item);
+
+    const elementType = type.slice(0, -"List".length) as ParamType;
+    if (item === undefined) return clone(this.workspace.createDefaultParam(elementType).value);
+    const node = this.#inputNode(item);
+    if (node) {
+      if (node.param_type !== elementType) {
+        throw new TypeError(`Expected ${elementType}, received ${node.param_type}.`);
+      }
+      return clone(node.value);
+    }
+    return clone(item);
+  }
+
+  #createStructListItem(item: unknown): QxqyParamNode {
+    const raw = this.node.value;
+    if (!isRecord(raw) || typeof raw.structId !== "string") {
+      throw new TypeError(`${this.path} has no StructList structId.`);
+    }
+    const structId = raw.structId;
+    let node = this.#inputNode(item);
+    if (!node && isRecord(item) && item.type === "Struct") {
+      node = { param_type: "Struct", value: clone(item) };
+    }
+    if (!node) {
+      if (!this.workspace.definitionRef(structId)) {
+        throw new Error(`Cannot create a default StructList item: unknown struct ${structId}.`);
+      }
+      node = this.workspace.createDefaultParam("Struct", structId);
+    }
+    if (node.param_type !== "Struct" || this.workspace.structIdOf(node) !== structId) {
+      throw new TypeError(`Expected Struct ${structId}.`);
+    }
+    const defaultNode = this.workspace.definitionRef(structId)
+      ? this.workspace.createDefaultParam("Struct", structId)
+      : undefined;
+    normalizeNode(this.workspace, node, defaultNode);
+    return node;
+  }
+
+  #createDictItem(item: unknown): { key: QxqyParamNode; value: QxqyParamNode } {
+    const raw = this.node.value;
+    if (!isRecord(raw)) throw new TypeError(`${this.path} has an invalid Dict value.`);
+    const expected = this.definition.defaultNode?.value;
+    const expectedDict = isRecord(expected) ? expected : undefined;
+    const keyType = this.#headerType(expectedDict?.key_type, raw.key_type, "key_type");
+    const valueType = this.#headerType(expectedDict?.value_type, raw.value_type, "value_type");
+    const valueStructId =
+      typeof expectedDict?.value_structId === "string"
+        ? expectedDict.value_structId
+        : typeof raw.value_structId === "string"
+          ? raw.value_structId
+          : undefined;
+    const input = isRecord(item) ? item : {};
+    const key = this.#createDictPart(input.key, keyType);
+    const value = this.#createDictPart(input.value, valueType, valueStructId);
+    return { key, value };
+  }
+
+  #createDictPart(input: unknown, type: ParamType, structId?: string): QxqyParamNode {
+    let node = this.#inputNode(input);
+    if (!node) {
+      if (input !== undefined) node = { param_type: type, value: clone(input) };
+      else {
+        if (type === "Struct" && (!structId || !this.workspace.definitionRef(structId))) {
+          throw new Error(
+            `Cannot create a default Dict value: unknown struct ${structId ?? ""}.`,
+          );
+        }
+        node = this.workspace.createDefaultParam(type, structId);
+      }
+    }
+    if (node.param_type !== type) {
+      throw new TypeError(`Expected Dict ${type}, received ${node.param_type}.`);
+    }
+    if (
+      (type === "Struct" || type === "StructList") &&
+      structId !== undefined &&
+      this.workspace.structIdOf(node) !== structId
+    ) {
+      throw new TypeError(`Expected Dict ${type} ${structId}.`);
+    }
+    normalizeNode(this.workspace, node, this.#defaultParam(type, structId));
+    return node;
+  }
+
+  #inputNode(input: unknown): QxqyParamNode | undefined {
+    if (input instanceof VariableValue) return input.toParamNode();
+    if (
+      isRecord(input) &&
+      input.format === "miliastra-variable/clipboard@1" &&
+      isParamNode(input.node)
+    ) {
+      return clone(input.node);
+    }
+    return isParamNode(input) ? clone(input) : undefined;
+  }
+
+  #headerType(
+    expected: unknown,
+    actual: unknown,
+    name: "key_type" | "value_type",
+  ): ParamType {
+    const type = typeof expected === "string" ? expected : actual;
+    if (typeof type !== "string") throw new TypeError(`${this.path} Dict has no ${name}.`);
+    return type;
+  }
+
+  #clipboard(node: QxqyParamNode): VariableClipboardData {
+    return { format: "miliastra-variable/clipboard@1", node: clone(node) };
+  }
+
+  #assertIndex(index: number, length: number, allowEnd = false): void {
+    const max = allowEnd ? length : length - 1;
+    if (!Number.isInteger(index) || index < 0 || index > max) {
+      throw new RangeError(`Index ${index} is outside 0..${max}.`);
+    }
   }
 
   #sameType(left: QxqyParamNode, right: QxqyParamNode): boolean {

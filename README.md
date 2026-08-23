@@ -14,11 +14,11 @@ structValue.type;       // 变量实际类型
 structValue.defineType; // 定义要求的类型
 structValue.name;       // 定义中的类型名
 
-structValue.value.新增变量1.value;
-structValue.value.新增变量2.value[0];
-structValue.value.新增变量21.value.子字段.value;
-structValue.value.新增变量24.value[0].key;
-structValue.value.新增变量24.value[0].value;
+structValue.value["新增变量1"].value;
+structValue.value["新增变量2"].value[0];
+structValue.value["新增变量21"].value["子字段"].value;
+structValue.value["新增变量24"].value[0].key;
+structValue.value["新增变量24"].value[0].value;
 ```
 
 `value` 的形状：普通类型返回原始值，普通列表返回原始数组，`Struct` 返回以字段名为键的对象，`StructList` 返回 `VariableValue[]`，`Dict` 返回 `{ key: VariableValue; value: VariableValue }[]`。
@@ -26,7 +26,7 @@ structValue.value.新增变量24.value[0].value;
 ## 类型冲突
 
 ```ts
-const field = structValue.value.新增变量1;
+const field = structValue.value["新增变量1"];
 field.type;
 field.defineType;
 field.isTypeMatch;
@@ -42,7 +42,7 @@ for (const warning of structValue.warnings) {
   console.warn(warning.kind, warning.path, warning.message);
 }
 
-const missing = structValue.value.缺少字段;
+const missing = structValue.value["缺少字段"];
 missing.value;      // 已从定义补入的默认值
 missing.type;       // ""，变量未提供实际类型
 missing.defineType; // 定义要求的类型
@@ -68,12 +68,55 @@ targetField.reset();          // 恢复工作区定义中的默认值
 
 字典粘贴还比较键类型、值类型和 `value_structId`。
 
+
+## 集合项操作
+
+普通列表、结构体列表和字典统一使用以下方法：
+
+```ts
+const list = variable.value["普通列表"];
+
+list.appendItem("新值");       // 追加，返回新下标
+list.appendItem();             // 按元素类型追加默认值
+list.insertItem(0, "插入值"); // 在下标前插入
+list.swapItems(0, 1);          // 交换两项
+const removed = list.removeItem(0);
+```
+
+结构体列表不传参数时，会从工作区定义创建默认结构体；也可以使用元素的 `copy()` 结果：
+
+```ts
+const list = variable.value["结构体列表"];
+const copied = list.value[0].copy();
+
+list.appendItem();
+list.insertItem(0, copied);
+const removed = list.removeItem(0);
+list.appendItem(removed);
+```
+
+字典新增项使用 `{ key, value }`。键和值既可以是原始值，也可以是对应 `VariableValue.copy()` 的结果：
+
+```ts
+const dict = variable.value["字典"];
+const copiedStruct = dict.value[0].value.copy();
+
+dict.appendItem({ key: "new-key", value: copiedStruct });
+dict.insertItem(0, { key: "first", value: copiedStruct });
+dict.swapItems(0, 1);
+
+const removedEntry = dict.removeItem(0);
+dict.appendItem(removedEntry);
+```
+
+所有操作都会校验下标、参数类型以及结构体 ID；不兼容时抛出 `TypeError`，越界时抛出 `RangeError`。
+
 ## 反推回千星格式
 
 ```ts
 const rawVariable = structValue.toQxqyValue();
 const json = structValue.serialize(2);
-const rawField = structValue.value.新增变量1.toParamNode();
+const rawField = structValue.value["新增变量1"].toParamNode();
 ```
 
 ## 批量定义与默认实例

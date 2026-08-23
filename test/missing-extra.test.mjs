@@ -42,9 +42,9 @@ test("fills missing tail fields with defaults while preserving the warning state
     value: [{ param_type: "String", value: "实际值" }],
   });
 
-  const missingStruct = parsed.value.缺少结构体;
-  const missingBool = parsed.value.缺少布尔;
-  assert.equal(missingStruct.value.标题.value, "默认标题");
+  const missingStruct = parsed.value["缺少结构体"];
+  const missingBool = parsed.value["缺少布尔"];
+  assert.equal(missingStruct.value["标题"].value, "默认标题");
   assert.equal(missingStruct.type, "");
   assert.equal(missingStruct.defineType, "Struct");
   assert.equal(missingStruct.presence, "missing");
@@ -54,8 +54,8 @@ test("fills missing tail fields with defaults while preserving the warning state
   assert.deepEqual(
     parsed.warnings.map(({ kind, path }) => ({ kind, path })),
     [
-      { kind: "missing-field", path: "$.value.缺少结构体" },
-      { kind: "missing-field", path: "$.value.缺少布尔" },
+      { kind: "missing-field", path: '$.value["缺少结构体"]' },
+      { kind: "missing-field", path: '$.value["缺少布尔"]' },
     ],
   );
 
@@ -94,7 +94,7 @@ test("retains extra fields, exposes them by source index and warns", () => {
   assert.equal(extra.defineType, undefined);
   assert.equal(extra.isExtra, true);
   assert.equal(parsed.warnings.at(-1).kind, "extra-field");
-  assert.equal(parsed.warnings.at(-1).path, "$.value.$extra[3]");
+  assert.equal(parsed.warnings.at(-1).path, '$.value["$extra[3]"]');
   assert.deepEqual(parsed.toQxqyValue(), source);
 });
 
@@ -108,8 +108,8 @@ test("a compatible paste resolves a missing-field warning", () => {
       { param_type: "Struct", value: { structId: "2", type: "Struct", value: [{ param_type: "String", value: "实际标题" }] } },
     ],
   });
-  const missing = parsed.value.缺少布尔;
-  const valid = ws.createDefault("1").value.缺少布尔.copy();
+  const missing = parsed.value["缺少布尔"];
+  const valid = ws.createDefault("1").value["缺少布尔"].copy();
 
   assert.equal(missing.canPaste(valid), true);
   assert.equal(missing.paste(valid), true);
