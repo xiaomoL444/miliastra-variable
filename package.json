@@ -1,6 +1,6 @@
 {
   "name": "miliastra-variable",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Parser and editable value model for Miliastra Wonderland struct variables",
   "type": "module",
   "main": "./dist/index.js",

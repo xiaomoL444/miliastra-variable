@@ -279,7 +279,9 @@ export class VariableValue {
     const valueStructId =
       typeof expectedDict?.value_structId === "string"
         ? expectedDict.value_structId
-        : undefined;
+        : typeof raw.value_structId === "string"
+          ? raw.value_structId
+          : undefined;
 
     return raw.value.flatMap((entry, index) => {
       if (!isRecord(entry) || !isParamNode(entry.key) || !isParamNode(entry.value)) {

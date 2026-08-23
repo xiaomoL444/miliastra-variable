@@ -3,12 +3,13 @@ import { normalizeNode } from "./normalization.js";
 import type {
   ParamType,
   QxqyDictNode,
+  QxqyExportedValue,
   QxqyParamNode,
   QxqyStructNode,
   RegisteredStructDefinition,
   StructDefinition,
 } from "./types.js";
-import { clone, isParamNode, isRecord, isStructNode } from "./utils.js";
+import { clone, isDictNode, isParamNode, isRecord, isStructNode } from "./utils.js";
 
 export type DefinitionCollection =
   | Record<string, StructDefinition>
@@ -67,7 +68,7 @@ export class VariableWorkspace {
   }
 
   parse(
-    variable: QxqyStructNode | QxqyParamNode | string,
+    variable: QxqyExportedValue | QxqyParamNode | string,
     options: ParseOptions = {},
   ): VariableValue {
     const parsed: unknown = typeof variable === "string" ? JSON.parse(variable) : variable;
@@ -76,16 +77,25 @@ export class VariableWorkspace {
       node = clone(parsed);
     } else if (isStructNode(parsed)) {
       node = { param_type: "Struct", value: clone(parsed) };
+    } else if (isDictNode(parsed)) {
+      node = { param_type: "Dict", value: clone(parsed) };
     } else {
-      throw new TypeError("Expected a Qianxing Struct node or Param node.");
+      throw new TypeError(
+        "Expected a Qianxing exported Struct/Dict value or Param node.",
+      );
     }
 
-    const actualId = this.structIdOf(node);
-    const definitionId = options.definitionId ?? actualId;
+    // A Dict's value_structId describes its values, not the root variable.
+    // Only Struct roots can be matched against a root Struct definition.
+    const isStructRoot = node.param_type === "Struct";
+    const actualId = isStructRoot ? this.structIdOf(node) : undefined;
+    const definitionId = isStructRoot
+      ? options.definitionId ?? actualId
+      : undefined;
     const definition = definitionId ? this.#definitions.get(definitionId) : undefined;
     const expected: ValueDefinition = {
       type: definition ? "Struct" : undefined,
-      structId: definitionId,
+      structId: definition ? definitionId : undefined,
       name: definition?.name,
       defaultNode:
         definitionId && definition

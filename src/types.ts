@@ -55,6 +55,9 @@ export interface QxqyDictNode {
   value_structId?: string;
 }
 
+/** Self-describing compound values exported without a Param-node wrapper. */
+export type QxqyExportedValue = QxqyStructNode | QxqyDictNode;
+
 export interface StructFieldDefinition {
   key: string;
   param_type: ParamType;

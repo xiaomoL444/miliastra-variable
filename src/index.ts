@@ -9,6 +9,7 @@ export type {
   ParamType,
   QxqyDictEntry,
   QxqyDictNode,
+  QxqyExportedValue,
   QxqyParamNode,
   QxqyStructListNode,
   QxqyStructNode,

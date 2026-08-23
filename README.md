@@ -21,6 +21,19 @@ structValue.value["新增变量24"].value[0].key;
 structValue.value["新增变量24"].value[0].value;
 ```
 
+### 直接解析千星导出值
+
+带有类型标记的自描述导出值可以直接传给 parse，调用方不需要补
+param_type/value 包装。目前支持结构体值和字典值：
+
+~~~ts
+const dictionary = workspace.parse(rawDictionaryJson);
+dictionary.type; // "Dict"
+dictionary.toQxqyValue(); // 返回原始字典本体，不包含内部包装
+~~~
+
+普通值和无法从内容推断元素类型的列表仍需使用 QxqyParamNode。例如空的
+StructList 本体只有 structId 和 value，自身不包含 StructList 类型信息。
 `value` 的形状：普通类型返回原始值，普通列表返回原始数组，`Struct` 返回以字段名为键的对象，`StructList` 返回 `VariableValue[]`，`Dict` 返回 `{ key: VariableValue; value: VariableValue }[]`。
 
 ## 类型冲突

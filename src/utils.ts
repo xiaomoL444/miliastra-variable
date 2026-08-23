@@ -19,3 +19,13 @@ export function isStructNode(value: unknown): value is import("./types.js").Qxqy
     Array.isArray(value.value)
   );
 }
+export function isDictNode(value: unknown): value is import("./types.js").QxqyDictNode {
+  return (
+    isRecord(value) &&
+    value.type === "Dict" &&
+    typeof value.key_type === "string" &&
+    typeof value.value_type === "string" &&
+    Array.isArray(value.value) &&
+    (value.value_structId === undefined || typeof value.value_structId === "string")
+  );
+}
