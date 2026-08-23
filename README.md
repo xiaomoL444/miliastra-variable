@@ -111,6 +111,34 @@ dict.appendItem(removedEntry);
 
 所有操作都会校验下标、参数类型以及结构体 ID；不兼容时抛出 `TypeError`，越界时抛出 `RangeError`。
 
+
+## 值校验
+
+集合操作会在修改数组前验证值，失败时抛出 `TypeError`，原集合保持不变：
+
+```ts
+const workspace = new VariableWorkspace();
+const integers = workspace.parse({
+  param_type: "Int32List",
+  value: [],
+});
+
+integers.appendItem("123");   // 成功
+integers.appendItem("12.5");  // TypeError，列表仍只有一项
+integers.appendItem(123);     // TypeError：千星数值使用字符串保存
+```
+
+会校验：
+
+- `String`：必须是字符串。
+- `Int32`：32 位整数字符串。
+- `Float`：有限数值字符串，支持小数和科学计数法。
+- `Bool`：仅 `"True"` 或 `"False"`。
+- `Vector3`：三个逗号分隔的有限数值。
+- `Entity`、`Guid`、`ConfigReference`、`EntityReference`、`Army`：整数字符串。
+- `Struct` / `StructList`：类型与结构体 ID 必须一致。
+- `Dict`：键和值分别按声明类型校验。
+
 ## 反推回千星格式
 
 ```ts

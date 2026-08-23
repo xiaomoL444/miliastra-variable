@@ -144,3 +144,43 @@ test("Dict supports typed entries, defaults, swap, remove and reinsertion", () =
   assert.equal(raw.value.value.length, 4);
   assert.equal(raw.value.value[3].value.param_type, "Struct");
 });
+
+
+test("validates primitive list values before mutation", () => {
+  const workspace = new VariableWorkspace();
+  const cases = [
+    { type: "StringList", valid: "text", invalid: 123 },
+    { type: "Int32List", valid: "2147483647", invalid: "2147483648" },
+    { type: "FloatList", valid: "-1.25e2", invalid: "NaN" },
+    { type: "BoolList", valid: "True", invalid: "true" },
+    { type: "Vector3List", valid: "1,-2.5,3e2", invalid: "1,2" },
+    { type: "GuidList", valid: "1077936130", invalid: "guid" },
+  ];
+
+  for (const { type, valid, invalid } of cases) {
+    const list = workspace.parse({ param_type: type, value: [] });
+    assert.throws(() => list.appendItem(invalid), TypeError);
+    assert.equal(list.itemCount, 0, `${type} mutated after failed validation`);
+    assert.equal(list.appendItem(valid), 0);
+    assert.equal(list.value[0], valid);
+  }
+});
+
+test("validates Dict keys and values atomically", () => {
+  const workspace = new VariableWorkspace();
+  const dict = workspace.parse({
+    param_type: "Dict",
+    value: {
+      type: "Dict",
+      key_type: "Int32",
+      value_type: "Bool",
+      value: [],
+    },
+  });
+
+  assert.throws(() => dict.appendItem({ key: "not-int", value: "True" }), TypeError);
+  assert.equal(dict.itemCount, 0);
+  assert.throws(() => dict.appendItem({ key: "1", value: "yes" }), TypeError);
+  assert.equal(dict.itemCount, 0);
+  assert.equal(dict.appendItem({ key: "1", value: "False" }), 0);
+});

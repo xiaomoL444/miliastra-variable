@@ -359,8 +359,10 @@ export class VariableValue {
       if (node.param_type !== elementType) {
         throw new TypeError(`Expected ${elementType}, received ${node.param_type}.`);
       }
+      this.#validateValue(elementType, node.value);
       return clone(node.value);
     }
+    this.#validateValue(elementType, item);
     return clone(item);
   }
 
@@ -432,6 +434,9 @@ export class VariableValue {
     ) {
       throw new TypeError(`Expected Dict ${type} ${structId}.`);
     }
+    if (type !== "Struct" && type !== "StructList" && type !== "Dict") {
+      this.#validateValue(type, node.value);
+    }
     normalizeNode(this.workspace, node, this.#defaultParam(type, structId));
     return node;
   }
@@ -456,6 +461,75 @@ export class VariableValue {
     const type = typeof expected === "string" ? expected : actual;
     if (typeof type !== "string") throw new TypeError(`${this.path} Dict has no ${name}.`);
     return type;
+  }
+
+
+
+  #validateValue(type: ParamType, value: unknown): void {
+    if (type.endsWith("List") && type !== "StructList") {
+      if (!Array.isArray(value)) this.#invalidValue(type, value);
+      const elementType = type.slice(0, -"List".length) as ParamType;
+      for (const element of value) this.#validateValue(elementType, element);
+      return;
+    }
+
+    if (typeof value !== "string") this.#invalidValue(type, value);
+    const text = value as string;
+    const numberPattern = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/;
+    const integerPattern = /^[+-]?\d+$/;
+
+    if (type === "String") return;
+    if (type === "Bool") {
+      if (text !== "True" && text !== "False") this.#invalidValue(type, value);
+      return;
+    }
+    if (type === "Int32") {
+      if (!integerPattern.test(text)) this.#invalidValue(type, value);
+      const number = Number(text);
+      if (!Number.isInteger(number) || number < -2147483648 || number > 2147483647) {
+        this.#invalidValue(type, value);
+      }
+      return;
+    }
+    if (type === "Float") {
+      if (!numberPattern.test(text) || !Number.isFinite(Number(text))) {
+        this.#invalidValue(type, value);
+      }
+      return;
+    }
+    if (type === "Vector3") {
+      const components = text.split(",");
+      if (
+        components.length !== 3 ||
+        components.some(
+          (component) =>
+            !numberPattern.test(component.trim()) ||
+            !Number.isFinite(Number(component.trim())),
+        )
+      ) {
+        this.#invalidValue(type, value);
+      }
+      return;
+    }
+
+    if (
+      [
+        "Entity",
+        "Guid",
+        "ConfigReference",
+        "EntityReference",
+        "Army",
+      ].includes(type) &&
+      !integerPattern.test(text)
+    ) {
+      this.#invalidValue(type, value);
+    }
+  }
+
+  #invalidValue(type: ParamType, value: unknown): never {
+    throw new TypeError(
+      `Invalid ${type} value at ${this.path}: ${JSON.stringify(value)}.`,
+    );
   }
 
   #clipboard(node: QxqyParamNode): VariableClipboardData {
